@@ -8,7 +8,13 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@statnett/vue-plotly": "^0.3.2",
+    "body-parser": "^1.19.0",
     "core-js": "^2.6.5",
+    "cors": "^2.8.5",
+    "elasticsearch": "^16.3.0",
+    "express": "^4.17.1",
+    "plotly.js": "^1.49.3",
     "vue": "^2.6.10",
     "vuetify": "^2.0.0",
     "vuex": "^3.0.1"

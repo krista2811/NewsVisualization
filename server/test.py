@@ -8,8 +8,6 @@ import elastic
 import json
 import sys
 import matplotlib.pyplot as plt
-from datetime import datetime
-from dateutil.relativedelta import relativedelta
 
 # configuration
 DEBUG = True
@@ -19,7 +17,6 @@ app = Flask(__name__)
 app.config.from_object(__name__)
 
 # enable CORS
-CORS(app)
           
 def get_plot(time, keywords):
     for (key, value) in keywords.items():
@@ -54,46 +51,20 @@ def get_keyword_hist(titles):
     # plot(time, keywords)
     return {"time": time, "keywords": keywords}
 
-def get_table_data(keywords, start, end):
-    start_str = start.strftime('%Y-%m-%d')
-    end_str = end.strftime('%Y-%m-%d')
-    mod_data = []
-    for doc in elastic.get_table(keywords, start_str, end_str)['hits']:
-        mod = doc['_source']
-        mod_data.append(mod)
-    return {'data': mod_data}
-
 @app.route('/')
 def index():
     return render_template('index.html')
 
-@app.route('/table', methods=['POST'])
-def table():
+def hist(request):
     try:
-
-        req_data = json.loads(request.data)
-        keywords = req_data["keywords"]
-        start = datetime.strptime(req_data['start'], "%Y-%m-%d")
-        end = start + relativedelta(months=1)
-
-        return jsonify(get_table_data(keywords, start, end))
-
-    except Exception as e:          
-        return e    
-
-@app.route('/hist', methods=['POST'])
-def post():
-    try:
-        keywords = json.loads(request.data)['query']
+        keywords = json.loads(request)
         data = get_keyword_hist(keywords)
-        print(data)
 
         time = data['time']
         keywords = data['keywords']
-
         return jsonify(data)
     except Exception as e:          
         return e
 
 if __name__ == '__main__':
-    app.run('0.0.0.0')
+    hist(input())

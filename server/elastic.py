@@ -13,7 +13,7 @@ basic_time_body = {
     "4": {
       "date_histogram": {
         "field": "timestamp",
-        "interval": "30d",
+        "interval": "1M",
         "time_zone": "Asia/Seoul",
         "min_doc_count": 1
       },
@@ -105,6 +105,65 @@ basic_time_body = {
   }
 }
 
+basic_table_body = {
+  "size": 500,
+  "sort": [{
+    "timestamp": "asc"
+    }
+  ],
+  "stored_fields": [
+    "*"
+  ],
+  "script_fields": {},
+  "_source": {
+    "excludes": []
+  },
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "bool": {
+            "should": [
+              {
+                "match_phrase": {
+                  "title": "감자"
+                }
+              },
+              {
+                "match_phrase": {
+                  "title": "고구마"
+                }
+              },
+              {
+                "match_phrase": {
+                  "title": "옥수수"
+                }
+              }
+            ],
+            "minimum_should_match": 1
+          }
+        },
+        {
+          "range": {
+            "timestamp": {
+              "format": "strict_date_optional_time",
+              "gte": "2011-09-22T15:00:00.000Z",
+              "lt": "2011-09-23T03:00:00.000Z"
+            }
+          }
+        }
+      ],
+      "filter": [
+        {
+          "match_all": {}
+        }
+      ],
+      "should": [],
+      "must_not": []
+    }
+  },
+}
+
 def make_hist_body(keywords):
     new_body = basic_time_body
     should = []
@@ -122,6 +181,23 @@ def make_hist_body(keywords):
 
     return new_body
 
+def make_table_body(keywords, start, end):
+  new_body = basic_table_body
+  should = []
+  for keyword in keywords:
+      phrase = {
+          "match_phrase": {"title": keyword}
+      }
+      query_string = {"query": keyword}
+      should.append(phrase)
+  new_body['query']['bool']['must'][0]['bool']['should'] = should
+  new_body['query']['bool']['must'][1]['range']['timestamp'] = {
+              "format": "strict_date_optional_time",
+              "gte": start,
+              "lt": end
+            }
+  return new_body 
+
 def get(body):
     results = es.search(index=index, body=body)
     return results['aggregations']['title']['buckets']
@@ -131,3 +207,7 @@ def get_hist(keywords):
     results = es.search(index=index, body=hist_body)
     return results['aggregations']['4']['buckets']
 
+def get_table(keywords, start, end):
+    table_body = make_table_body(keywords, start, end)
+    results = es.search(index=index, body=table_body)
+    return results['hits']
